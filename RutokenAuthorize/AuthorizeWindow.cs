@@ -32,16 +32,16 @@ namespace RutokenAuthorize
         {
             using (var pkcs11 = new Pkcs11(Settings.Pkcs11LibraryPath, AppType.MultiThreaded))
             {
-                // Установление соединения с Рутокен в первом доступном слоте
+                // Establishing a connection with Rutoken in the first available slot
                 Slot slot = Helpers.GetUsableSlot(pkcs11);
 
-                // Открытие RW сессии
+                // Opening RW session
                 using (Session session = slot.OpenSession(SessionType.ReadWrite))
                 {
-                    // Выполнение аутентификации пользователя
+                    // Performing user authentication
                     session.Login(CKU.CKU_USER, password_textbox.Text);
 
-                    // Шаблон для поиска закрытого ключа ГОСТ Р 34.10-2001
+                    // Template for searching for a GOST R 34.10-2001 private key
                     var publicKeyAttributes = new List<ObjectAttribute>
                     {
                         new ObjectAttribute(CKA.CKA_CLASS, CKO.CKO_PUBLIC_KEY),
@@ -88,16 +88,16 @@ namespace RutokenAuthorize
         {
             using (var pkcs11 = new Pkcs11(Settings.Pkcs11LibraryPath, AppType.MultiThreaded))
             {
-                // Установление соединения с Рутокен в первом доступном слоте
+                // Establishing a connection with Rutoken in the first available slot
                 Slot slot = Helpers.GetUsableSlot(pkcs11);
 
-                // Открытие RW сессии
+                // Opening RW session
                 using (Session session = slot.OpenSession(SessionType.ReadWrite))
                 {
-                    // Выполнение аутентификации пользователя
+                    // Performing user authentication
                     session.Login(CKU.CKU_USER, password_textbox.Text);
 
-                    // Шаблон для поиска закрытого ключа ГОСТ Р 34.10-2012
+                    // Template for searching for a GOST R 34.10-2012 private key
                     var privateKeyAttributes = new List<ObjectAttribute>
                     {
                         new ObjectAttribute(CKA.CKA_CLASS, CKO.CKO_PRIVATE_KEY),
@@ -107,7 +107,7 @@ namespace RutokenAuthorize
                     };
                     List<ObjectHandle> privateKeys = session.FindAllObjects(privateKeyAttributes);
 
-                    // Шаблон для поиска соответствующего открытого ключа
+                    // Template for searching for the corresponding public key
                     var publicKeyAttributes = new List<ObjectAttribute>
                     {
                         new ObjectAttribute(CKA.CKA_CLASS, CKO.CKO_PUBLIC_KEY),
@@ -142,7 +142,7 @@ namespace RutokenAuthorize
                         RsaKeyParameters publicKey = new RsaKeyParameters(false, new Org.BouncyCastle.Math.BigInteger(1, modulus), new Org.BouncyCastle.Math.BigInteger(1, exponent));
 
 
-                        // Генерация случайных данных
+                        // Generating random data
                         byte[] dataToEncrypt = new byte[32];
                         using (var rng = new RNGCryptoServiceProvider())
                         {
@@ -152,19 +152,19 @@ namespace RutokenAuthorize
 
                         try
                         {
-                            // Шифрование данных с использованием открытого ключа
+                            // Encrypting data using the public key
                             var encryptionMechanism = new Mechanism(CKM.CKM_RSA_PKCS);
 
                             byte[] encryptedData = EncryptDataWithRSA(dataToEncrypt, publicKey);
                             log("ENCRYPTED DATA: " + BitConverter.ToString(encryptedData));
 
-                            // Расшифрование данных с использованием закрытого ключа
+                            // Decrypting data using the private key
                             var decryptionMechanism = new Mechanism(CKM.CKM_RSA_PKCS);
                             byte[] decryptedData = session.Decrypt(decryptionMechanism, privateKeys[0], encryptedData);
 
                             log("DECRYPTED DATA: " + BitConverter.ToString(decryptedData));
 
-                            // Проверка подлинности данных
+                            // Validating the authenticity of the data
                             bool isValid = StructuralComparisons.StructuralEqualityComparer.Equals(dataToEncrypt, decryptedData);
                             log("VALIDATION RESULT: " + isValid);
                         }
@@ -182,14 +182,14 @@ namespace RutokenAuthorize
 
         static byte[] EncryptDataWithRSA(byte[] data, RsaKeyParameters publicKey)
         {
-            // Используем RSA с PKCS1Padding для шифрования
+            // Using RSA with PKCS1Padding for encryption
             IAsymmetricBlockCipher engine = new Pkcs1Encoding(new RsaEngine());
             engine.Init(true, publicKey);
 
             return engine.ProcessBlock(data, 0, data.Length);
         }
 
-        // Экспорт открытого ключа в формат PEM
+        // Exporting the public key to PEM format
         private static string ExportPublicKeyToPEM(RSA rsa)
         {
             var sb = new StringBuilder();
@@ -198,7 +198,6 @@ namespace RutokenAuthorize
             sb.AppendLine("-----END PUBLIC KEY-----");
             return sb.ToString();
         }
-
 
         public void create_key_pair(string id)
         {
@@ -213,7 +212,7 @@ namespace RutokenAuthorize
                     // Login as normal user
                     session.Login(CKU.CKU_USER, password_textbox.Text);
 
-                    // Генерация ключей для RSA шифрования
+                    // Generating keys for RSA encryption
                     ObjectHandle privateKeyHandle = null;
                     ObjectHandle publicKeyHandle = null;
                     Helpers.GenerateRSAKeyPair(session, out publicKeyHandle, out privateKeyHandle, id);
@@ -236,7 +235,6 @@ namespace RutokenAuthorize
 
         }
 
-
         private void create_keys_button_Click(object sender, EventArgs e)
         {
             create_key_pair(ID_textbox.Text);
@@ -248,7 +246,7 @@ namespace RutokenAuthorize
         }
         static byte[] HexStringToByteArray(string hex)
         {
-            // Длина строки должна быть четной, так как каждый байт представлен двумя символами
+            // The string length must be even, as each byte is represented by two characters
             if (hex.Length % 2 != 0)
                 throw new ArgumentException("Invalid length of the hex string.");
 
@@ -256,7 +254,7 @@ namespace RutokenAuthorize
 
             for (int i = 0; i < hex.Length; i += 2)
             {
-                // Парсим каждый два символа как шестнадцатеричное число
+                // Parsing each two characters as a hexadecimal number
                 byteArray[i / 2] = Convert.ToByte(hex.Substring(i, 2), 16);
             }
 
