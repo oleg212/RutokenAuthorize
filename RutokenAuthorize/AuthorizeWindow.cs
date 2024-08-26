@@ -41,7 +41,7 @@ namespace RutokenAuthorize
                     // Performing user authentication
                     session.Login(CKU.CKU_USER, password_textbox.Text);
 
-                    // Template for searching for a GOST R 34.10-2001 private key
+                    // Template for searching for an RSA keypair
                     var publicKeyAttributes = new List<ObjectAttribute>
                     {
                         new ObjectAttribute(CKA.CKA_CLASS, CKO.CKO_PUBLIC_KEY),
@@ -97,7 +97,7 @@ namespace RutokenAuthorize
                     // Performing user authentication
                     session.Login(CKU.CKU_USER, password_textbox.Text);
 
-                    // Template for searching for a GOST R 34.10-2012 private key
+                    // Template for searching for an RSA private key
                     var privateKeyAttributes = new List<ObjectAttribute>
                     {
                         new ObjectAttribute(CKA.CKA_CLASS, CKO.CKO_PRIVATE_KEY),
@@ -187,16 +187,6 @@ namespace RutokenAuthorize
             engine.Init(true, publicKey);
 
             return engine.ProcessBlock(data, 0, data.Length);
-        }
-
-        // Exporting the public key to PEM format
-        private static string ExportPublicKeyToPEM(RSA rsa)
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine("-----BEGIN PUBLIC KEY-----");
-            sb.AppendLine(Convert.ToBase64String(rsa.ExportSubjectPublicKeyInfo(), Base64FormattingOptions.InsertLineBreaks));
-            sb.AppendLine("-----END PUBLIC KEY-----");
-            return sb.ToString();
         }
 
         public void create_key_pair(string id)
